@@ -1,98 +1,101 @@
-# IA-incaseofstudy
+---
+title: "Cyclistic Bike-Share Case Study"
+author: "Elías Francisco Sandoval Valderas"
+output: html_document
+---
+
 # 🚲 Cyclistic Bike-Share Case Study
 *Google Data Analytics Capstone Project*
 
 ## 📌 Scenario
-Cyclistic is a bike-share company based in Chicago. Since launching its bike-share program in 2016, the company has grown to a fleet of more than 5,800 bicycles. Cyclistic offers two main types of users: **casual riders** (non-members) and **annual members**. The marketing team wants to understand how casual riders and members use Cyclistic bikes differently — and what strategies could turn casual users into paying members.
+Cyclistic is a bike-share company based in Chicago. Since launching in 2016, it has grown to over 5,800 bicycles. There are two user types: **casual riders** and **annual members**. The goal is to analyze their behaviors and find strategies to convert casual users into members.
 
-This project was developed as part of the [Google Data Analytics Certificate](https://www.coursera.org/professional-certificates/google-data-analytics) and serves as a portfolio piece to demonstrate practical skills in data cleaning, analysis, and storytelling.
+## 🔍 Guiding Questions
+- How do annual members and casual riders use Cyclistic bikes differently?
+- What strategies can convert casual riders into annual members?
 
----
+## 💻 Tools
+- R, RStudio
+- tidyverse, lubridate
+- R Markdown
 
-## 🔍 Guiding Question
-**How do annual members and casual riders use Cyclistic bikes differently?**  
-**What strategies can encourage casual riders to become annual members?**
+## 🧬 Step 1: Ask
+```{r echo=FALSE}
+cat("Business Task: Convert casual riders into members\nStakeholders: Marketing and Executive teams")
+```
 
----
+## 📁 Step 2: Prepare - Load Libraries and Import Data
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lubridate)
+library(janitor)
+```
 
-## 💻 Tools Used
-- **R** for data cleaning, analysis, and visualization
-- **RStudio** as the development environment
-- **tidyverse** and **lubridate** packages
-- **R Markdown** for documentation
+```{r}
+# Load specific CSVs for 2019 Q1 and 2020 Q1
+q1_2019 <- read_csv("C:/Users/elias/OneDrive/Desktop/R/Divvy_Trips_2019_Q1.csv")
+q1_2020 <- read_csv("C:/Users/elias/OneDrive/Desktop/R/Divvy_Trips_2020_Q1.csv")
 
----
+# Combine both datasets
+raw_data <- bind_rows(q1_2019, q1_2020)
+```
 
-## 🧭 Methodology: The Six-Step Data Analysis Process
+## 🧹 Step 3: Process - Clean the Data
+```{r}
+# Clean column names
+all_trips <- raw_data %>% 
+  clean_names() %>%
+  filter(!is.na(start_station_name), !is.na(end_station_name)) %>%
+  mutate(
+    ride_length = as.numeric(difftime(ended_at, started_at, units = "mins")),
+    day_of_week = wday(started_at, label = TRUE),
+    date = as.Date(started_at)
+  ) %>% 
+  filter(ride_length > 0)
+```
 
-1. **Ask**  
-   - Business Task: Design marketing strategies aimed at converting casual riders into annual members.
-   - Stakeholders: Cyclistic marketing team and executive team.
+## 📊 Step 4: Analyze - Compare User Behavior
+```{r}
+# Average ride length by user type
+all_trips %>% 
+  group_by(member_casual) %>% 
+  summarise(avg_ride = mean(ride_length), median_ride = median(ride_length))
 
-2. **Prepare**  
-   - Source: Publicly available historical trip data from [Divvy](https://divvybikes.com/system-data).
-   - Data Period: (e.g. May 2022 – April 2023).
-   - Format: `.csv` files.
+# Number of rides per weekday
+all_trips %>% 
+  group_by(member_casual, day_of_week) %>%
+  summarise(rides = n(), .groups = "drop") %>%
+  ggplot(aes(x = day_of_week, y = rides, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  labs(title = "Rides per Weekday by User Type") +
+  theme_minimal()
+```
 
-3. **Process**  
-   - Merged 12 monthly datasets into one.
-   - Removed missing and duplicate values.
-   - Converted date and time fields using `lubridate`.
+## 📈 Most Popular Ride Lengths
+```{r}
+# Histogram of ride lengths (limited for visibility)
+all_trips %>% 
+  filter(ride_length < 60) %>%
+  ggplot(aes(x = ride_length, fill = member_casual)) +
+  geom_histogram(binwidth = 5, position = "dodge") +
+  labs(title = "Ride Length Distribution (<60 mins)") +
+  theme_minimal()
+```
 
-4. **Analyze**  
-   - Compared ride lengths, bike types, and days of the week between members and casual riders.
-   - Identified behavior trends (e.g., longer rides on weekends by casual users).
+## 💡 Step 5: Share - Key Insights
+```{r echo=FALSE}
+cat("\nKey Insights:\n\n- Casual riders ride more on weekends and have longer ride durations.\n- Members use bikes more frequently during weekdays.\n- Classic bikes are most used by both groups.\n")
+```
 
-5. **Share**  
-   - Summary statistics, graphs (bar charts, line plots), and descriptive insights were compiled into this notebook.
-   - Recommendations documented below.
+## 🚀 Step 6: Act - Business Recommendations
+- Offer weekend membership discounts to casual users.
+- Promote benefits of membership in the app.
+- Provide trial memberships to incentivize conversion.
+- Use data-driven targeted emails based on usage patterns.
 
-6. **Act**  
-   - Proposed marketing actions based on insights:
-     - Launch weekend promotions.
-     - Encourage app use among casual riders.
-     - Offer trial memberships.
-
----
-
-## 📊 Key Findings
-
-- Casual riders tend to ride more on weekends; members ride consistently throughout the week.
-- Casual riders take longer rides on average.
-- Both user types prefer classic bikes over electric or docked bikes.
-
----
-
-## 💡 Recommendations
-
-- Create targeted weekend membership campaigns.
-- Promote benefits of membership inside the mobile app.
-- Offer first-month discounts for casual users.
-- Analyze further by surveying casual riders.
-
----
-
-## ✅ Next Steps
-
-- Create a dashboard using Power BI or Tableau.
-- Add advanced insights (e.g., churn prediction or clustering).
-- Translate findings into marketing-ready material.
-
----
-
-## 📁 Folder Structure
-
-```plaintext
-cyclistic-case-study/
-│
-├── data/                # Raw CSV files
-├── scripts/             # R scripts used
-├── analysis/            # R Markdown and notebooks
-├── visuals/             # Charts and graphs
-└── README.md            # Project documentation
-
----
-## Attribution
-The data used in this project was provided by Motivate International Inc. under the City of Chicago’s open data policy.
+## 📌 Data Source
+Data from [Divvy Bikes](https://divvybikes.com/system-data) provided by Motivate International Inc. under the City of Chicago’s open data policy.
 
 ---
+
+*End of Case Study Notebook.*
