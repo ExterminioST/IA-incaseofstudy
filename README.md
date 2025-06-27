@@ -90,3 +90,9 @@ cyclistic-case-study/
 ├── analysis/            # R Markdown and notebooks
 ├── visuals/             # Charts and graphs
 └── README.md            # Project documentation
+
+---
+## Attribution
+The data used in this project was provided by Motivate International Inc. under the City of Chicago’s open data policy.
+
+---
